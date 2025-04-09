@@ -41,6 +41,14 @@ class SessionManager {
             secret: secret
         }
     }
+
+    validate_session(session_id: SessionID, secret: Secret): boolean {
+        if (session_id == null || secret == null) {
+            return false;
+        }
+
+        return this.secret_map.get(session_id) == secret;
+    }
 };
 
 const SESSION_MANAGER = new SessionManager();
@@ -97,10 +105,24 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
     })
 
     socket.on('bindSession', data => {
+        if (data.secret == null || data.session == null) {
+            socket.emit("onSession", {
+                success: false
+            });
 
-    })
+            return;
+        }
 
-    socket.on('onChallenge', data => {
+        if (!SESSION_MANAGER.validate_session(data.session, data.secret)) {
+            socket.emit("onSession", { 
+                success: false
+            });
 
+            return;
+        }
+
+        socket.emit("onSession", { 
+            success: true
+        });
     })
 }

@@ -18,29 +18,23 @@ export enum AuthResponseCode {
 }
 
 export interface SessionRequest {
-    session : string;
+    session : SessionID;
+
+    // TODO : wtf is this
+    secret: Secret;
 };
 export interface SessionResponse {
     success : boolean;
 };
 
-export interface ChallengeRequest {
-    suffix : string;
-};
-export interface ChallengeResponse {
-    hash : string;
-};
-
 export interface AuthClientToServerEvents {
     authenticate : (request: AuthRequest) => void;
     bindSession  : (request: SessionRequest) => void;
-    onChallenge  : (response: ChallengeResponse) => void;
 };
 
 export interface AuthServerToClientEvents {
     onAuthenticate : (response: AuthResponse) => void;
     onSession      : (response: SessionResponse) => void;
-    challenge      : (request: ChallengeRequest) => void;
 };
 
 /**

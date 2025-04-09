@@ -1,0 +1,15 @@
+{
+  "name": "hc2-streaming-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server/entry.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
+}

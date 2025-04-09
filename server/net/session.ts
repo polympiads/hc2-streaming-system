@@ -1,7 +1,7 @@
 
 import { Socket } from "socket.io";
 
-interface SocketSession {
+export interface SocketSession {
     user: string;
 
     // Session properties (such as session uuid or secret)
@@ -26,6 +26,6 @@ class SessionManager {
 
 const SESSION_MANAGER = new SessionManager();
 
-function add_authentication_handlers (socket: Socket) {
+export function add_authentication_handlers (socket: Socket) {
 
 }

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Manager</title>
+    
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <script>
+        const socket = io.connect('http://localhost:3000');
+        const localVideo = document.getElementById('localVideo');
+        const peer = new RTCPeerConnection();
+    
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+          .then(stream => {
+            localVideo.srcObject = stream;
+            stream.getTracks().forEach(track => peer.addTrack(track, stream));
+            return peer.createOffer();
+          })
+          .then(offer => {
+            peer.setLocalDescription(offer);
+            socket.emit('offer', offer);
+          });
+    
+        socket.on('answer', answer => {
+          peer.setRemoteDescription(new RTCSessionDescription(answer));
+        });
+    
+        peer.onicecandidate = e => {
+          if (e.candidate) {
+            socket.emit('ice-candidate', e.candidate);
+          }
+        };
+    </script>
+</body>
+</html>

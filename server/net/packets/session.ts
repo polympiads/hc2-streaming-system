@@ -1,3 +1,4 @@
+import { Secret, SessionID } from "../session";
 
 export interface AuthRequest {
     username: string;
@@ -5,9 +6,16 @@ export interface AuthRequest {
 };
 
 export interface AuthResponse {
-    session : string | null;
-    secret  : string | null;
+    code: AuthResponseCode;
+    session : SessionID | null;
+    secret  : Secret | null;
 };
+
+export enum AuthResponseCode {
+    OK,
+    BadCredentials,
+    BadRequest
+}
 
 export interface SessionRequest {
     session : string;

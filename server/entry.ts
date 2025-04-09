@@ -4,6 +4,9 @@ import http from 'http';
 import { DefaultEventsMap, Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 
+import { ClientToServerEvents as AClientToServerEvents, ServerToClientEvents as AServerToClientEvents } from './net/interface';
+import { Client } from 'socket.io/dist/client';
+
 interface ClientToServerEvents {
 	/// The admin request a specific camera. Should be sent directly
 	/// To the camera.
@@ -59,10 +62,13 @@ type AdminAuthChallengeServerResponse = {
 	
 }
 
+type CLV = ClientToServerEvents & AClientToServerEvents;
+type CLS = ServerToClientEvents & AServerToClientEvents;
+
 const app = express();
 
 const server = http.createServer(app);
-const io     = new Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>(server);
+const io     = new Server<CLV, CLS, DefaultEventsMap, SocketData>(server);
 
 app.use(express.static('public'))
 

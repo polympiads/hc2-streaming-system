@@ -71,6 +71,8 @@ class UserManager {
 
 const USER_MANAGER = new UserManager();
 
+USER_MANAGER.add_user("login", "password");
+
 export const get_user = (username: Username) => USER_MANAGER.get_user(username)
 
 export function load_user() {

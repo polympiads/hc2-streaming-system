@@ -1,17 +1,37 @@
 
 class AuthManager {
+    constructor () {
+        this.promises = [];
+    }
+    wait () {
+        let resolve = undefined;
+        const prom = new Promise((_resolve, _) => resolve = _resolve);
+        this.promises.push(() => resolve())
+        return prom
+    }
+    onSuccess () {
+        for (let prom of this.promises)
+            prom();
+        this.promises = [];
+    }
     getSecret () {
         return getCookie("x-secret");
     }
     getSession () {
         return getCookie("x-session");
     }
+    getUsername () {
+        return getCookie("x-username");
+    }
     clearSession () {
         clearCookie("x-secret");
         clearCookie("x-session");
+        clearCookie("x-username");
     }
 
     authenticate (username, password) {
+        setCookie("x-username", username);
+
         this.socket.emit("authenticate", { "username": username, "password": password })
     }
 
@@ -25,23 +45,18 @@ class AuthManager {
 
         setCookie("x-secret",  payload.secret);
         setCookie("x-session", payload.session);
+
+        this.onSuccess();
     }
     onSession (payload) {
-        if (payload.success) return ;
+        console.log(payload)
+        if (payload.success) {
+            this.onSuccess();
+            return ;
+        }
 
         this.clearSession();
         throw "Authentication failed";
-    }
-    challenge (challenge) {
-        const session = this.getSession();
-        const secret  = this.getSecret();
-        if (session === null || session === undefined) throw "Missing session.";
-        if (secret  === null || secret  === undefined) throw "Missing secret.";
-
-        const crypto = new SubtleCrypto();
-        const target = crypto.digest("SHA256", session + secret + challenge.suffix);
-
-        this.socket.emit("onChallenge", { "hash": target });
     }
     tryBind () {
         const session = this.getSession();
@@ -49,7 +64,7 @@ class AuthManager {
         if (session === null || session === undefined) return ;
         if (secret  === null || secret  === undefined) return ;
 
-        this.socket.emit("bindSession", { "session": session });
+        this.socket.emit("bindSession", { "session": session, "secret": secret });
     }
 
     bindSocket (socket) {
@@ -58,7 +73,6 @@ class AuthManager {
 
         socket.on("onAuthenticate", payload => this.onAuthenticate(payload))
         socket.on("onSession", session => this.onSession(session))
-        socket.on("challenge", request => this.challenge(request))
     }
 }
 
@@ -66,3 +80,5 @@ const AUTH_MANAGER = new AuthManager();
 
 const authBindSocket = (socket) => AUTH_MANAGER.bindSocket(socket);
 const authenticate   = (username, password) => AUTH_MANAGER.authenticate(username, password);
+const authWait       = () => AUTH_MANAGER.wait();
+const getUsername    = AUTH_MANAGER.getUsername;

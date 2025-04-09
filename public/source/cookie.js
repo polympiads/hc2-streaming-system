@@ -35,6 +35,9 @@ const COOKIE_MANAGER = new CookieManager();
 const setCookie = (key, value) => COOKIE_MANAGER.setCookie(key, value);
 const getCookie = (key)        => COOKIE_MANAGER.getCookie(key);
 
-const clearCookie = (key) => {
-    browser.cookies.remove(key);
+const clearCookie = ( name ) => {
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:01 GMT";
+    
+    COOKIE_MANAGER.innerProperty = null;
+    COOKIE_MANAGER.load();
 }

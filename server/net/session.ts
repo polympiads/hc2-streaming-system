@@ -13,8 +13,8 @@ type Session = {
 }
 
 class SessionManager {
-    private id_map: Map<SessionID, Session>;
-    private user_to_session_id: Map<UserID, SessionID>;
+    id_map: Map<SessionID, Session>;
+    user_to_session_id: Map<UserID, SessionID>;
 
     constructor() {
         this.id_map = new Map();
@@ -43,6 +43,9 @@ class SessionManager {
             client_ip_address: ip_address
         };
 
+        const user = get_user(user_id);
+        console.log(`User ${user?.get_name()} is logged with ip ${ip_address}`)
+
         this.user_to_session_id.set(user_id, id);
         this.id_map.set(id, session)
 
@@ -50,11 +53,17 @@ class SessionManager {
     }
 
     revoke_session(session_id: SessionID): boolean {
+        const session = this.id_map.get(session_id);
+        if (session != undefined) {
+            const user = get_user(session.user_id);
+            console.log(`Revoking session on ip ${session.client_ip_address} for user ${user?.get_name()}`)
+        }
+
         return this.id_map.delete(session_id)
     }
 
-    revoke_session_for_user(session_id: UserID): boolean {
-        const session = this.user_to_session_id.get(session_id);
+    revoke_session_for_user(user_id: UserID): boolean {
+        const session = this.user_to_session_id.get(user_id);
         if (session == undefined) {
             return false;
         }
@@ -66,6 +75,15 @@ class SessionManager {
 
     get_session(session_id: SessionID): Session | undefined {
         return this.id_map.get(session_id)
+    }
+
+    get_session_for_user(user_id: UserID): Session | undefined {
+        const session = this.user_to_session_id.get(user_id);
+        if (session == undefined) {
+            return undefined;
+        }
+
+        return this.id_map.get(session)
     }
 
     validate_session(session_id: SessionID, ip_address: string): boolean {
@@ -101,6 +119,7 @@ export function validate_session_admin(session_id: SessionID, ip_address: string
 
 export const revoke_session = (session_id: SessionID) => SESSION_MANAGER.revoke_session(session_id)
 export const revoke_session_for_user = (user_id: UserID) => SESSION_MANAGER.revoke_session_for_user(user_id)
+export const get_session_for_user = (user_id: UserID) => SESSION_MANAGER.get_session_for_user(user_id)
 
 export function add_authentication_handlers (socket: Socket<AuthClientToServerEvents, AuthServerToClientEvents>) {
     let client_ip = socket.handshake.address;
@@ -172,3 +191,5 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
         });
     })
 }
+
+

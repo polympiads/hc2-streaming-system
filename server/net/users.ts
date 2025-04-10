@@ -13,20 +13,22 @@ export enum UserType {
 };
 
 export class User {
+    private name: string;
     private salt: string;
     private hash: string;
     private id: UserID;
     private type: UserType;
 
-    constructor(password: string, id: UserID, type: UserType) {
+    constructor(name: string, password: string, id: UserID, type: UserType) {
         this.salt = randomString(SALT_SIZE);
         this.hash = sha256(password + this.salt);
         this.id = id;
         this.type = type;
+        this.name = name;
     }
 
     with_new_password(password: string): User {
-        return new User(password, this.id, this.type);
+        return new User(this.name, password, this.id, this.type);
     }
 
     validate_password(password: string): boolean {
@@ -43,6 +45,10 @@ export class User {
 
     get_type(): UserType {
         return this.type;
+    }
+
+    get_name(): string {
+        return this.name;
     }
 }
 
@@ -67,7 +73,7 @@ class UserManager {
         const id = uuidv4();
 
         this.id_map.set(username, id);
-        this.user_map.set(id, new User(password, id, type));
+        this.user_map.set(id, new User(username, password, id, type));
 
         return true;
     }
@@ -109,12 +115,18 @@ class UserManager {
 
         return this.user_map.get(id);
     }
+
+    get_all_users(): MapIterator<[Username, UserID]> {
+        return this.id_map.entries()
+    }
 }
 
 const USER_MANAGER = new UserManager();
 
+export const set_new_password = (username: Username, password: string) => USER_MANAGER.set_new_password(username, password)
 export const get_user_by_name = (username: Username) => USER_MANAGER.get_user_by_name(username)
 export const get_user = (username: UserID) => USER_MANAGER.get_user_by_id(username)
+export const all_user_iterator = () => USER_MANAGER.get_all_users()
 
 export function load_user() {
     let user = process.env.USERNAME

@@ -14,8 +14,12 @@ class CookieManager {
             if (el == "") continue ;
 
             let [key, value] = el.split("=", 2);
-            value = JSON.parse(atob(value.replaceAll("%", "=")))
-            this.innerProperty[key] = value;
+            try {
+                value = JSON.parse(atob(value.replaceAll("%", "=")))
+                this.innerProperty[key] = value;
+            } catch (InvalidCharacterException) {
+                // ignore the cookie if it's not in the right format
+            }
         }
     }
 

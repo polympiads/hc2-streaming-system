@@ -40,6 +40,7 @@ class AuthManager {
         setCookie("x-session", payload.session);
 
         this.onSuccess();
+        console.log("Login success")
     }
     onSession (payload) {
         console.log(payload)
@@ -49,7 +50,7 @@ class AuthManager {
         }
 
         this.clearSession();
-        throw "Authentication failed";
+        throw "Session has expired. Please relog.";
     }
     tryBind () {
         const session = this.getSession();

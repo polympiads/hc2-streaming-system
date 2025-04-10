@@ -7,6 +7,7 @@ import { ClientToServerEvents as AClientToServerEvents, ServerToClientEvents as 
 import { add_authentication_handlers } from './net/session';
 import { load_user as load_users } from './net/users';
 import { add_camera_management_functions } from './net/rtc';
+import { launch_management_input } from './management';
 
 load_users();
 
@@ -65,4 +66,6 @@ io.on('connection', socket => {
   
 server.listen(3000, () => {
     console.log('Signaling server running on http://localhost:3000');
+
+	launch_management_input();
 });

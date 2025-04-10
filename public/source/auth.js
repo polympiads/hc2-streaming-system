@@ -49,7 +49,6 @@ class AuthManager {
         this.onSuccess();
     }
     onSession (payload) {
-        console.log(payload)
         if (payload.success) {
             this.onSuccess();
             return ;

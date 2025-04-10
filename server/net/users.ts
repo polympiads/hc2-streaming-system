@@ -72,6 +72,7 @@ class UserManager {
 const USER_MANAGER = new UserManager();
 
 USER_MANAGER.add_user("login", "password");
+USER_MANAGER.add_user("admin", "password");
 
 export const get_user = (username: Username) => USER_MANAGER.get_user(username)
 

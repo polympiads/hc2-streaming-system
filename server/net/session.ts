@@ -148,5 +148,27 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             code: AuthResponseCode.OK,
             session: session.session_id, 
         });
-    })    
+    })
+
+    socket.on('bindSession', data => {
+        if (data.session == null) {
+            socket.emit("onSession", {
+                success: false
+            });
+
+            return;
+        }
+
+        if (!SESSION_MANAGER.validate_session(data.session, client_ip)) {
+            socket.emit("onSession", { 
+                success: false
+            });
+
+            return;
+        }
+
+        socket.emit("onSession", { 
+            success: true
+        });
+    })
 }

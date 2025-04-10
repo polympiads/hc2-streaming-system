@@ -4,14 +4,15 @@ class RTCViewer {
 
         SOCKET.on("rtcOffer", async offer => {
             if (offer.channel != channel) return ;
-            this.video.pause();
+            console.log("RECEIVED", offer)
+            await this.video.pause();
             this.video.srcObject = null;
             if (this.peer)
                 this.peer.close();
             this.peer = new RTCPeerConnection({  });
-            this.peer.ontrack = event => {
+            this.peer.ontrack = async event => {
                 this.video.srcObject = event.streams[0];
-                this.video.play();
+                await this.video.play();
             };
             this.peer.onicecandidate = e => {
                 if (e.candidate) {

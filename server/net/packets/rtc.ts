@@ -37,6 +37,7 @@ export interface RTCClientToServerEvents {
 
 export interface RTCServerToClientEvents {
     enableCamera:  (enableRequest: EnableCameraChannel) => void;
+    exposeChannel: (exposeRequest: ExposeCameraChannel) => void;
 
     rtcOffer:        (offer: PacketRTCCameraOffer)      => void;
     rtcAnswer:       (answer: PacketRTCCameraAnswer)    => void;

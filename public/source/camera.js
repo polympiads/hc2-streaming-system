@@ -77,7 +77,8 @@ class CameraManager {
         this.low_controller  = new RTCController("CAM_low", this.low_feed, undefined);
         this.high_controller = new RTCController("CAM_high", this.high_feed, undefined);
 
-        SOCKET.emit("exposeCamera", { camera: feed  });
+        SOCKET.emit("exposeChannel", { camera: feed  });
+        SOCKET.on("enableCamera", payload => this.enableCamera(payload.channel))
     }
 
     enableCamera (channel) {

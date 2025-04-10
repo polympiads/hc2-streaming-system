@@ -1,25 +1,21 @@
 
 import { Socket } from "socket.io";
 import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } from "./packets/session";
-import { get_user, User, UserID, Username } from "./users";
+import { get_user, User, UserID } from "./users";
 import { v4 as uuidv4 } from "uuid";
 import { randomString } from "./utils";
 
-const SECRET_LEN: number = 40;
-export type Secret = string;
+const SESSION_LEN: number = 40;
 export type SessionID = string;
 
 type Session = {
     id: SessionID;
-    secret: Secret;
 }
 
 class SessionManager {
     private user_to_session_id: Map<UserID, SessionID>;
-    private secret_map: Map<SessionID, Secret>;
 
     constructor() {
-        this.secret_map = new Map();
         this.user_to_session_id = new Map();
     }
 
@@ -28,26 +24,29 @@ class SessionManager {
             return undefined
         }
 
-        let id = this.user_to_session_id.get(user_id)
-        if (id == undefined) {
-            id = uuidv4();
-            this.user_to_session_id.set(user_id, id);
+        if (this.user_to_session_id.has(user_id)) {
+            this.user_to_session_id.delete(user_id);
         }
-        const secret = randomString(SECRET_LEN);
-        this.secret_map.set(id, secret);
+
+        const id_set = new Set(this.user_to_session_id.values());
+        let id;
+        do {
+            id = uuidv4();
+        } while(id_set.has(id));
+        this.user_to_session_id.set(user_id, id);
 
         return {
             id: id,
-            secret: secret
         }
     }
 
-    validate_session(session_id: SessionID, secret: Secret): boolean {
-        if (session_id == null || secret == null) {
+    validate_session(session_id: SessionID): boolean {
+        if (session_id == null) {
             return false;
         }
 
-        return this.secret_map.get(session_id) == secret;
+        const id_set = new Set(this.user_to_session_id.values());
+        return id_set.has(session_id);
     }
 };
 
@@ -59,7 +58,6 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadRequest,
                 session: null, 
-                secret: null
             });
 
             return;
@@ -70,7 +68,6 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadCredentials,
                 session: null, 
-                secret: null
             });
 
             return;
@@ -80,7 +77,6 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadCredentials,
                 session: null, 
-                secret: null
             });
 
             return;
@@ -91,7 +87,6 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadRequest,
                 session: null, 
-                secret: null
             });
 
             return;
@@ -100,12 +95,11 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
         socket.emit("onAuthenticate", { 
             code: AuthResponseCode.OK,
             session: session.id, 
-            secret: session.secret
         });
     })
 
     socket.on('bindSession', data => {
-        if (data.secret == null || data.session == null) {
+        if (data.session == null) {
             socket.emit("onSession", {
                 success: false
             });
@@ -113,7 +107,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
 
-        if (!SESSION_MANAGER.validate_session(data.session, data.secret)) {
+        if (!SESSION_MANAGER.validate_session(data.session)) {
             socket.emit("onSession", { 
                 success: false
             });

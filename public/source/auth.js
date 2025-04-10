@@ -14,9 +14,6 @@ class AuthManager {
             prom();
         this.promises = [];
     }
-    getSecret () {
-        return getCookie("x-secret");
-    }
     getSession () {
         return getCookie("x-session");
     }
@@ -24,7 +21,6 @@ class AuthManager {
         return getCookie("x-username");
     }
     clearSession () {
-        clearCookie("x-secret");
         clearCookie("x-session");
         clearCookie("x-username");
     }
@@ -36,14 +32,11 @@ class AuthManager {
     }
 
     onAuthenticate (payload) {
-        if (payload.session === null
-         || payload.secret  === null
-        ) {
+        if (payload.session === null) {
             this.clearSession();
             throw "Authentication failed";
         }
 
-        setCookie("x-secret",  payload.secret);
         setCookie("x-session", payload.session);
 
         this.onSuccess();
@@ -60,11 +53,9 @@ class AuthManager {
     }
     tryBind () {
         const session = this.getSession();
-        const secret  = this.getSecret();
         if (session === null || session === undefined) return ;
-        if (secret  === null || secret  === undefined) return ;
 
-        this.socket.emit("bindSession", { "session": session, "secret": secret });
+        this.socket.emit("bindSession", { "session": session });
     }
 
     bindSocket (socket) {

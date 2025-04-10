@@ -6,36 +6,22 @@
     <title>Document</title>
     
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/source/cookie.js"></script>
+  <script src="/source/auth.js"></script>
+  <script src="/source/viewer.js"></script>
 </head>
 <body>
-    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="CAM_low" autoplay muted></video>
+    <video id="CAM_high" autoplay muted></video>
     <script>
-        const socket = io.connect('http://localhost:3000');
-        const remoteVideo = document.getElementById('remoteVideo');
-        const peer = new RTCPeerConnection();
-    
-        peer.ontrack = event => {
-          remoteVideo.srcObject = event.streams[0];
-        };
-    
-        socket.on('offer', offer => {
-          peer.setRemoteDescription(new RTCSessionDescription(offer))
-            .then(() => peer.createAnswer())
-            .then(answer => {
-              peer.setLocalDescription(answer);
-              socket.emit('answer', answer);
-            });
-        });
-    
-        socket.on('ice-candidate', candidate => {
-          peer.addIceCandidate(new RTCIceCandidate(candidate));
-        });
-    
-        peer.onicecandidate = e => {
-          if (e.candidate) {
-            socket.emit('ice-candidate', e.candidate);
-          }
-        };
+        const SOCKET = io.connect('http://localhost:3000');
+
+        authBindSocket(SOCKET)
+        
+        authWait().then(() => {
+          const viewer1 = new RTCViewer("CAM_low", "CAM_admin_low");
+          const viewer2 = new RTCViewer("CAM_high", "CAM_admin_high");
+        })
     </script>
 </body>
 </html>

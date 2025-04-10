@@ -4,6 +4,7 @@ import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } 
 import { get_user, User, UserID, Username } from "./users";
 import { v4 as uuidv4 } from "uuid";
 import { randomString } from "./utils";
+import { add_rtc_handlers } from "./rtc";
 
 const SECRET_LEN: number = 40;
 export type Secret = string;
@@ -102,6 +103,8 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             session: session.id, 
             secret: session.secret
         });
+
+        add_rtc_handlers(socket);
     })
 
     socket.on('bindSession', data => {
@@ -124,5 +127,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
         socket.emit("onSession", { 
             success: true
         });
+
+        add_rtc_handlers(socket);
     })
 }

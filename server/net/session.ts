@@ -1,7 +1,7 @@
 
 import { Socket } from "socket.io";
 import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } from "./packets/session";
-import { get_user, User, UserID } from "./users";
+import { get_user, get_user_by_name, User, UserID, UserType } from "./users";
 import { v4 as uuidv4 } from "uuid";
 
 export type SessionID = string;
@@ -28,7 +28,7 @@ class SessionManager {
 
         const current_id = this.user_to_session_id.get(user_id);
         if (current_id != undefined) {
-            this.id_map.delete(current_id);
+            this.revoke_session(current_id);
             this.user_to_session_id.delete(user_id);
         }
 
@@ -49,6 +49,25 @@ class SessionManager {
         return session
     }
 
+    revoke_session(session_id: SessionID): boolean {
+        return this.id_map.delete(session_id)
+    }
+
+    revoke_session_for_user(session_id: UserID): boolean {
+        const session = this.user_to_session_id.get(session_id);
+        if (session == undefined) {
+            return false;
+        }
+
+        this.revoke_session(session);
+
+        return true;
+    }
+
+    get_session(session_id: SessionID): Session | undefined {
+        return this.id_map.get(session_id)
+    }
+
     validate_session(session_id: SessionID, ip_address: string): boolean {
         if (session_id == null) {
             return false;
@@ -65,6 +84,24 @@ class SessionManager {
 
 const SESSION_MANAGER = new SessionManager();
 
+export const validate_session = (session_id: SessionID, ip_address: string) => SESSION_MANAGER.validate_session(session_id, ip_address)
+export function validate_session_admin(session_id: SessionID, ip_address: string): boolean {
+    const session = SESSION_MANAGER.get_session(session_id);
+    if (session == undefined) {
+        return false;
+    }
+
+    const user = get_user(session.user_id);
+    if (user == undefined) {
+        return false;
+    }
+
+    return session.client_ip_address == ip_address && user.get_type() == UserType.Admin;
+}
+
+export const revoke_session = (session_id: SessionID) => SESSION_MANAGER.revoke_session(session_id)
+export const revoke_session_for_user = (user_id: UserID) => SESSION_MANAGER.revoke_session_for_user(user_id)
+
 export function add_authentication_handlers (socket: Socket<AuthClientToServerEvents, AuthServerToClientEvents>) {
     let client_ip = socket.handshake.address;
     
@@ -78,7 +115,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
         
-        let user: User | undefined = get_user(data.username);
+        let user: User | undefined = get_user_by_name(data.username);
         if (user == undefined) {
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadCredentials,

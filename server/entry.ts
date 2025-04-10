@@ -1,12 +1,14 @@
 
 import express from 'express';
 import http from 'http';
-import { DefaultEventsMap, Server } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
+import { Server } from 'socket.io';
 
 import { ClientToServerEvents as AClientToServerEvents, ServerToClientEvents as AServerToClientEvents } from './net/interface';
-import { Client } from 'socket.io/dist/client';
 import { add_authentication_handlers } from './net/session';
+import { load_user as load_users } from './net/users';
+import { add_camera_management_functions } from './net/rtc';
+
+load_users();
 
 interface ClientToServerEvents {
 	/// The admin request a specific camera. Should be sent directly
@@ -38,6 +40,7 @@ app.use(express.static('public'))
 
 io.on('connection', socket => {
 		add_authentication_handlers(socket);
+		add_camera_management_functions(socket);
 
 		// remove the auth id when the socket disconnects
 		socket.on("disconnect", _ => {

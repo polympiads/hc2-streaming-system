@@ -1,3 +1,4 @@
+import { revoke_session, revoke_session_for_user } from "./session";
 import { randomString, sha256 } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 
@@ -6,15 +7,26 @@ const SALT_SIZE: number = 10;
 export type UserID = string;
 export type Username = string;
 
+export enum UserType {
+    Admin,
+    Camera
+};
+
 export class User {
     private salt: string;
     private hash: string;
     private id: UserID;
+    private type: UserType;
 
-    constructor(password: string, id: UserID) {
+    constructor(password: string, id: UserID, type: UserType) {
         this.salt = randomString(SALT_SIZE);
         this.hash = sha256(password + this.salt);
         this.id = id;
+        this.type = type;
+    }
+
+    with_new_password(password: string): User {
+        return new User(password, this.id, this.type);
     }
 
     validate_password(password: string): boolean {
@@ -28,6 +40,10 @@ export class User {
     get_id(): UserID {
         return this.id;
     }
+
+    get_type(): UserType {
+        return this.type;
+    }
 }
 
 class UserManager {
@@ -39,7 +55,7 @@ class UserManager {
         this.id_map = new Map();
     }
 
-    add_user(username: Username, password: string): boolean {
+    add_user(username: Username, password: string, type: UserType): boolean {
         if (username == null || password == null) {
             return false;
         }
@@ -51,29 +67,54 @@ class UserManager {
         const id = uuidv4();
 
         this.id_map.set(username, id);
-        this.user_map.set(id, new User(password, id));
+        this.user_map.set(id, new User(password, id, type));
 
         return true;
     }
 
-    get_user(username: Username): User | undefined {
+    set_new_password(username: Username, password: string): boolean {
+        let id = this.id_map.get(username)
+        if (id == undefined) {
+            return false;
+        }
+
+        let user = this.user_map.get(id);
+        if (user == undefined) {
+            return false;
+        }
+
+        this.user_map.set(id, user.with_new_password(password));
+        revoke_session_for_user(id);
+
+        return true;
+    }
+
+    get_user_by_name(username: Username): User | undefined {
         if (username == undefined) {
             return undefined
         }
 
-        const id = this.id_map.get(username)
+        const id = this.id_map.get(username);
         if (id == undefined) {
             return undefined;
         }
+
+        return this.get_user_by_id(id);
+    }
+
+    get_user_by_id(id: UserID): User | undefined {
+        if (id == undefined) {
+            return undefined
+        }
+
         return this.user_map.get(id);
     }
 }
 
 const USER_MANAGER = new UserManager();
 
-USER_MANAGER.add_user("login", "password");
-
-export const get_user = (username: Username) => USER_MANAGER.get_user(username)
+export const get_user_by_name = (username: Username) => USER_MANAGER.get_user_by_name(username)
+export const get_user = (username: UserID) => USER_MANAGER.get_user_by_id(username)
 
 export function load_user() {
     let user = process.env.USERNAME
@@ -83,5 +124,5 @@ export function load_user() {
         throw "USERNAME and PASSWORD environement variables needs to be set"
     }
 
-    USER_MANAGER.add_user(user, password)
+    USER_MANAGER.add_user(user, password, UserType.Admin)
 }

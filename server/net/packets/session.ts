@@ -16,21 +16,12 @@ export enum AuthResponseCode {
     BadRequest
 }
 
-export interface SessionRequest {
-    session : SessionID;
-};
-export interface SessionResponse {
-    success : boolean;
-};
-
 export interface AuthClientToServerEvents {
     authenticate : (request: AuthRequest) => void;
-    bindSession  : (request: SessionRequest) => void;
 };
 
 export interface AuthServerToClientEvents {
     onAuthenticate : (response: AuthResponse) => void;
-    onSession      : (response: SessionResponse) => void;
 };
 
 /**

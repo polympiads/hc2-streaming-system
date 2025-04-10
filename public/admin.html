@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Manager</title>
-    
+    <title>Server Admin</title>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="/source/cookie.js"></script>
     <script src="/source/auth.js"></script>
-    <script src="/source/camera.js"></script>
+    <script src="/source/viewer.js"></script>
+    <script src="/source/admin.js"></script>
 </head>
 <body>
-    <video id="CAM_low" autoplay muted></video>
-    <video id="CAM_high" autoplay muted></video>
-    <script>
-      const SOCKET = io.connect('http://localhost:3000');
+    <div id="admin-list">
 
-      authBindSocket(SOCKET);
+    </div>
+
+    <script>
+        const SOCKET = io.connect('http://localhost:3000');
+  
+        authBindSocket(SOCKET)
+        adminBindSocket(SOCKET)
     </script>
 </body>
 </html>

@@ -3,6 +3,8 @@ import { Socket } from "socket.io";
 import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } from "./packets/session";
 import { get_user, get_user_by_name, User, UserID, UserType } from "./users";
 import { v4 as uuidv4 } from "uuid";
+import { randomString } from "./utils";
+import { add_rtc_handlers } from "./rtc";
 
 export type SessionID = string;
 
@@ -167,6 +169,8 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             code: AuthResponseCode.OK,
             session: session.session_id, 
         });
+
+        add_rtc_handlers(socket);
     })
 
     socket.on('bindSession', data => {
@@ -189,6 +193,8 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
         socket.emit("onSession", { 
             success: true
         });
+
+        add_rtc_handlers(socket);
     })
 }
 

@@ -3,18 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login Page</title>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="/source/cookie.js"></script>
     <script src="/source/auth.js"></script>
-    <script src="/source/camera.js"></script>
 </head>
 <body>
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username" required><br><br>
+
+    <label for="password">Password:</label><br>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <button id="authenticate">Login</button>
+
+    <p>Currently logged in as : <span id="username-value"></span></p>
+
+    <ul id="target" style="display: none;">
+        <li><a href="/camera.html">Get access to camera</a></li>
+        <li><a href="/viewer.html">Get access to viewer</a></li>
+        <li id="admin-btn"><a href="/admin.html">Get access to admin</a></li>
+    </ul>
+
     <script defer>
         const SOCKET = io.connect('http://localhost:3000');
 
         authBindSocket(SOCKET);
+
+        authWait().then(() => {
+            const username = getUsername()
+            if (username == null) {
+                document.querySelector("#target").style.display = "none";
+                document.querySelector("#username-value").innerText = ""
+            } else {
+                document.querySelector("#target").style.display = "block";
+                document.querySelector("#username-value").innerText = username
+            }
+            if (username != "admin") {
+                document.querySelector("#admin-btn").style.display = "none";
+            } else {
+                document.querySelector("#admin-btn").style.display = "list-item";
+            }
+        })
+
+        document.querySelector("#authenticate").onclick = (ev) =>
+            authenticate(
+                document.querySelector("#username").value,
+                document.querySelector("#password").value
+            )
     </script>
 </body>
 </html>

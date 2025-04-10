@@ -1,55 +1,47 @@
 import { Socket } from "socket.io";
-import { Response, RTCClientToServerEvents, RTCServerToClientEvents } from "./packets/rtc";
-import { validate_session_admin } from "./session";
-import { get_user, UserType } from "./users";
+import { RTCClientToServerEvents, RTCServerToClientEvents } from "./packets/rtc";
 
-export function add_camera_management_functions(socket: Socket<RTCClientToServerEvents, RTCServerToClientEvents>) {
-    const ip = socket.handshake.address;
+class RTCManager {
+    feeds: Set<string> = new Set();
+
+    addFeed (feed: string) {
+        this.feeds.add(feed);
+    }
+    getFeeds () {
+        return this.feeds;
+    }
+};
+
+const RTC_MANAGER = new RTCManager();
+
+export function get_rtc_feeds () {
+    return RTC_MANAGER.getFeeds();
+}
+
+export function add_rtc_handlers (socket: Socket<RTCClientToServerEvents, RTCServerToClientEvents>) {
+    socket.on("rtcOffer", offer => {
+        socket.broadcast.emit("rtcOffer", offer);
+    })
+
+    socket.on("rtcAnswer", offer => {
+        socket.broadcast.emit("rtcAnswer", offer);
+    })
+
+    socket.on("rtcIceCandidate", offer => {
+        socket.broadcast.emit("rtcIceCandidate", offer);
+    })
     
-    socket.on("enableCamera", data => {
-        if (!validate_session_admin(data.session_id, ip)) {
-            socket.emit("onEnableCamera", Response.NotAuthorized);
-            socket.disconnect();
-
-            return;
-        }
-
-        const camera = get_user(data.camera);
-        if (camera == undefined) {
-            socket.emit("onEnableCamera", Response.BadCamera);
-            socket.disconnect();
-
-            return;
-        }
-        if (camera.get_type() != UserType.Camera) {
-            socket.emit("onEnableCamera", Response.BadCamera);
-            socket.disconnect();
-
-            return;
-        }
-
-        // TODO : RTC
+    socket.on("enableCamera", offer => {
+        socket.emit("enableCamera", offer);
+        socket.broadcast.emit("enableCamera", offer);
     })
-    socket.on("exposeChannel", data => {
-        if (!validate_session_admin(data.session_id, ip)) {
-            socket.emit("onEnableCamera", Response.NotAuthorized);
-            socket.disconnect();
-        }
+    
+    socket.on("exposeChannel", offer => {
+        RTC_MANAGER.addFeed(offer.camera);
 
-        const camera = get_user(data.camera);
-        if (camera == undefined) {
-            socket.emit("onEnableCamera", Response.BadCamera);
-            socket.disconnect();
-
-            return;
-        }
-        if (camera.get_type() != UserType.Camera) {
-            socket.emit("onEnableCamera", Response.BadCamera);
-            socket.disconnect();
-
-            return;
-        }
-
-        // TODO : RTC
+        socket.broadcast.emit("exposeChannel", offer);
     })
+
+    for (let feed of get_rtc_feeds())
+        socket.emit("exposeChannel", { "camera": feed })
 }

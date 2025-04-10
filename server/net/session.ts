@@ -3,56 +3,71 @@ import { Socket } from "socket.io";
 import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } from "./packets/session";
 import { get_user, User, UserID } from "./users";
 import { v4 as uuidv4 } from "uuid";
-import { randomString } from "./utils";
 
-const SESSION_LEN: number = 40;
 export type SessionID = string;
 
 type Session = {
-    id: SessionID;
+    session_id: SessionID;
+    user_id: UserID;
+    client_ip_address: string;
 }
 
 class SessionManager {
+    private id_map: Map<SessionID, Session>;
     private user_to_session_id: Map<UserID, SessionID>;
 
     constructor() {
+        this.id_map = new Map();
         this.user_to_session_id = new Map();
     }
 
-    handle_user_connect(user_id: UserID): Session | undefined {
+    handle_user_connect(user_id: UserID, ip_address: string): Session | undefined {
         if (user_id == null) {
             return undefined
         }
 
-        if (this.user_to_session_id.has(user_id)) {
+        const current_id = this.user_to_session_id.get(user_id);
+        if (current_id != undefined) {
+            this.id_map.delete(current_id);
             this.user_to_session_id.delete(user_id);
         }
 
-        const id_set = new Set(this.user_to_session_id.values());
         let id;
         do {
             id = uuidv4();
-        } while(id_set.has(id));
-        this.user_to_session_id.set(user_id, id);
+        } while(this.id_map.has(id));
 
-        return {
-            id: id,
-        }
+        let session: Session = {
+            session_id: id,
+            user_id,
+            client_ip_address: ip_address
+        };
+
+        this.user_to_session_id.set(user_id, id);
+        this.id_map.set(id, session)
+
+        return session
     }
 
-    validate_session(session_id: SessionID): boolean {
+    validate_session(session_id: SessionID, ip_address: string): boolean {
         if (session_id == null) {
             return false;
         }
 
-        const id_set = new Set(this.user_to_session_id.values());
-        return id_set.has(session_id);
+        const session = this.id_map.get(session_id);
+        if (session == undefined) {
+            return false;
+        }
+
+        return session.client_ip_address == ip_address;
     }
 };
 
 const SESSION_MANAGER = new SessionManager();
 
 export function add_authentication_handlers (socket: Socket<AuthClientToServerEvents, AuthServerToClientEvents>) {
+    let client_ip = socket.handshake.address;
+    
     socket.on('authenticate', data => {
         if (data.username == null || data.password == null) {
             socket.emit("onAuthenticate", { 
@@ -82,7 +97,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
 
-        let session = SESSION_MANAGER.handle_user_connect(user.get_id());
+        let session = SESSION_MANAGER.handle_user_connect(user.get_id(), client_ip);
         if (session == undefined) {
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadRequest,
@@ -94,7 +109,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
 
         socket.emit("onAuthenticate", { 
             code: AuthResponseCode.OK,
-            session: session.id, 
+            session: session.session_id, 
         });
     })
 
@@ -107,7 +122,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
 
-        if (!SESSION_MANAGER.validate_session(data.session)) {
+        if (!SESSION_MANAGER.validate_session(data.session, client_ip)) {
             socket.emit("onSession", { 
                 success: false
             });

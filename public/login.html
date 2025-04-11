@@ -6,6 +6,7 @@
     <title>Login Page</title>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/source/socket.js"></script>
     <script src="/source/cookie.js"></script>
     <script src="/source/auth.js"></script>
 </head>
@@ -27,8 +28,6 @@
     </ul>
 
     <script defer>
-        const SOCKET = io.connect('http://stream.polympiads.ch');
-
         authBindSocket(SOCKET);
 
         authWait().then(() => {

@@ -6,16 +6,16 @@
     <title>Camera Manager</title>
     
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/source/socket.js"></script>
     <script src="/source/cookie.js"></script>
     <script src="/source/auth.js"></script>
     <script src="/source/camera.js"></script>
 </head>
 <body>
+  <div id="log"></div>
     <video id="CAM_low" autoplay muted></video>
     <video id="CAM_high" autoplay muted></video>
     <script>
-      const SOCKET = io.connect('http://stream.polympiads.ch');
-
       authBindSocket(SOCKET);
     </script>
 </body>

@@ -3,15 +3,16 @@ import { Socket } from "socket.io";
 import { AuthClientToServerEvents, AuthResponseCode, AuthServerToClientEvents } from "./packets/session";
 import { get_user, get_user_by_name, User, UserID, UserType } from "./users";
 import { v4 as uuidv4 } from "uuid";
-import { randomString } from "./utils";
 import { add_rtc_handlers } from "./rtc";
+import { get_client_ip_info, IpInfoDebug } from "./ip";
+import assert from "node:assert";
 
 export type SessionID = string;
 
 type Session = {
     session_id: SessionID;
     user_id: UserID;
-    client_ip_address: string;
+    ip_info: IpInfoDebug
 }
 
 class SessionManager {
@@ -23,7 +24,7 @@ class SessionManager {
         this.user_to_session_id = new Map();
     }
 
-    handle_user_connect(user_id: UserID, ip_address: string): Session | undefined {
+    handle_user_connect(user_id: UserID, ip_info: IpInfoDebug): Session | undefined {
         if (user_id == null) {
             return undefined
         }
@@ -42,11 +43,11 @@ class SessionManager {
         let session: Session = {
             session_id: id,
             user_id,
-            client_ip_address: ip_address
+            ip_info
         };
 
         const user = get_user(user_id);
-        console.log(`User ${user?.get_name()} is logged with ip ${ip_address}`)
+        console.log(`User ${user?.get_name()} is logged in on ip ${ip_info}.`)
 
         this.user_to_session_id.set(user_id, id);
         this.id_map.set(id, session)
@@ -58,7 +59,7 @@ class SessionManager {
         const session = this.id_map.get(session_id);
         if (session != undefined) {
             const user = get_user(session.user_id);
-            console.log(`Revoking session on ip ${session.client_ip_address} for user ${user?.get_name()}`)
+            console.log(`Revoking session for user ${user?.get_name()}`)
         }
 
         return this.id_map.delete(session_id)
@@ -88,24 +89,20 @@ class SessionManager {
         return this.id_map.get(session)
     }
 
-    validate_session(session_id: SessionID, ip_address: string): boolean {
+    validate_session(session_id: SessionID): boolean {
         if (session_id == null) {
             return false;
         }
 
         const session = this.id_map.get(session_id);
-        if (session == undefined) {
-            return false;
-        }
-
-        return session.client_ip_address == ip_address;
+        return session != undefined
     }
 };
 
 const SESSION_MANAGER = new SessionManager();
 
-export const validate_session = (session_id: SessionID, ip_address: string) => SESSION_MANAGER.validate_session(session_id, ip_address)
-export function validate_session_admin(session_id: SessionID, ip_address: string): boolean {
+export const validate_session = (session_id: SessionID) => SESSION_MANAGER.validate_session(session_id)
+export function validate_session_admin(session_id: SessionID): boolean {
     const session = SESSION_MANAGER.get_session(session_id);
     if (session == undefined) {
         return false;
@@ -116,7 +113,7 @@ export function validate_session_admin(session_id: SessionID, ip_address: string
         return false;
     }
 
-    return session.client_ip_address == ip_address && user.get_type() == UserType.Admin;
+    return user.get_type() == UserType.Admin;
 }
 
 export const revoke_session = (session_id: SessionID) => SESSION_MANAGER.revoke_session(session_id)
@@ -124,9 +121,9 @@ export const revoke_session_for_user = (user_id: UserID) => SESSION_MANAGER.revo
 export const get_session_for_user = (user_id: UserID) => SESSION_MANAGER.get_session_for_user(user_id)
 
 export function add_authentication_handlers (socket: Socket<AuthClientToServerEvents, AuthServerToClientEvents>) {
-    let client_ip = socket.handshake.address;
-    
     socket.on('authenticate', data => {
+        const ip_info = get_client_ip_info(socket);
+
         if (data.username == null || data.password == null) {
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadRequest,
@@ -155,7 +152,7 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
 
-        let session = SESSION_MANAGER.handle_user_connect(user.get_id(), client_ip);
+        let session = SESSION_MANAGER.handle_user_connect(user.get_id(), ip_info);
         if (session == undefined) {
             socket.emit("onAuthenticate", { 
                 code: AuthResponseCode.BadRequest,
@@ -174,6 +171,8 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
     })
 
     socket.on('bindSession', data => {
+        const ip_info = get_client_ip_info(socket);
+
         if (data.session == null) {
             socket.emit("onSession", {
                 success: false
@@ -182,13 +181,28 @@ export function add_authentication_handlers (socket: Socket<AuthClientToServerEv
             return;
         }
 
-        if (!SESSION_MANAGER.validate_session(data.session, client_ip)) {
+        if (!SESSION_MANAGER.validate_session(data.session)) {
             socket.emit("onSession", { 
                 success: false
             });
 
             return;
         }
+
+        const session = SESSION_MANAGER.get_session(data.session);
+        assert(session != undefined);
+        const user = get_user(session.user_id);
+        if (user == undefined) {
+            console.log("WARNING : session is bound to undefined user. Revoking immediately.");
+            revoke_session(data.session);
+
+            socket.emit("onSession", { 
+                success: false
+            });
+
+            return;
+        }
+        console.log(`Session ${data.session} has been rebound for user ${user.get_name()} with ip ${ip_info}`)
 
         socket.emit("onSession", { 
             success: true

@@ -6,7 +6,6 @@ import { Server } from 'socket.io';
 import { ClientToServerEvents as AClientToServerEvents, ServerToClientEvents as AServerToClientEvents } from './net/interface';
 import { add_authentication_handlers } from './net/session';
 import { load_user as load_users } from './net/users';
-import { add_camera_management_functions } from './net/rtc';
 import { launch_management_input } from './management';
 
 load_users();
@@ -41,7 +40,6 @@ app.use(express.static('public'))
 
 io.on('connection', socket => {
 		add_authentication_handlers(socket);
-		add_camera_management_functions(socket);
 
 		// remove the auth id when the socket disconnects
 		socket.on("disconnect", _ => {

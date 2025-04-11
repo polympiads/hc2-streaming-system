@@ -1,9 +1,5 @@
 import { SessionID } from "../session";
 
-export interface RequestBase {
-    session_id: SessionID
-}
-
 export enum Buffer {
     STREAM_BUFFER0 = 1,
     STREAM_BUFFER1 = 2
@@ -15,10 +11,10 @@ export enum Response {
     BadCamera
 }
 
-export interface ExposeCameraChannel extends RequestBase {
+export interface ExposeCameraChannel {
     camera: string;
 };
-export interface EnableCameraChannel extends RequestBase {
+export interface EnableCameraChannel {
     camera: string;
     channel: string;
     buffer:  Buffer;

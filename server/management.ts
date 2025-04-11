@@ -35,7 +35,7 @@ program.command('listsessions')
             
             process.stdout.write(`${user_id}`.padEnd(36) + " " + `${username}`.padEnd(15))
             if (session != undefined) {
-                process.stdout.write(` ` + `${session.session_id}`.padEnd(36) + " " + `${session.client_ip_address}`)
+                process.stdout.write(` ` + `${session.session_id}`.padEnd(36) + " " + `${session.ip_info}`)
             }
             process.stdout.write('\n');
         }

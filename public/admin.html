@@ -6,6 +6,7 @@
     <title>Server Admin</title>
 
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/source/socket.js"></script>
     <script src="/source/cookie.js"></script>
     <script src="/source/auth.js"></script>
     <script src="/source/viewer.js"></script>
@@ -17,8 +18,6 @@
     </div>
 
     <script>
-        const SOCKET = io.connect('http://localhost:3000');
-  
         authBindSocket(SOCKET)
         adminBindSocket(SOCKET)
     </script>

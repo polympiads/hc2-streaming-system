@@ -2,6 +2,13 @@
 const rtc_config  = {};
 const constraints = { audio: false, video: true };
 
+function log (data) {
+    const div = document.createElement("div")
+    div.innerText = JSON.stringify(data);
+
+    document.querySelector("#log").appendChild(div);
+}
+
 class RTCController {
     constructor (doc_id, channel, resolution) {
         this.video = document.querySelector(`#${doc_id}`);
@@ -41,10 +48,11 @@ class RTCController {
               SOCKET.emit('rtcIceCandidate', { "channel": this.channel, "packet": e.candidate });
             }
         };
+        log("CREATE PEER")
 
         const media = await navigator.mediaDevices.getUserMedia(constraints)
-        console.log(media)
-        console.log(media.getTracks())
+        log(media)
+        log(media.getTracks())
         for (let track of media.getTracks())
             this.peer.addTrack(track, media)
 
@@ -60,7 +68,7 @@ class RTCController {
 class CameraManager {
     constructor () {
         authWait().then(() => {
-            console.log("Expose")
+            log("Exposing data");
             this.expose();
         })
     }
@@ -70,6 +78,8 @@ class CameraManager {
 
         const feed = `CAM_${username}`;
         this.feed  = feed;
+
+        log({ username, feed })
 
         this.low_feed  = `${feed}_low`;
         this.high_feed = `${feed}_high`;
@@ -82,6 +92,7 @@ class CameraManager {
     }
 
     enableCamera (channel) {
+        log({ "type": "enableCamera", channel })
         if (channel == this.low_feed)  this.low_controller .enable();
         if (channel == this.high_feed) this.high_controller.enable();
     }

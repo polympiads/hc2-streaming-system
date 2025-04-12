@@ -14,8 +14,8 @@ function create_feed_div (channel) {
     const video = div.querySelector("#tvideo")
     video.id = `tvideo-${channel}`;
 
-    const bf0 = div.querySelector("buffer0");
-    const bf1 = div.querySelector("buffer1");
+    const bf0 = div.querySelector("#buffer0");
+    const bf1 = div.querySelector("#buffer1");
 
     const cont = div.children.item(0);
     div.removeChild(cont)

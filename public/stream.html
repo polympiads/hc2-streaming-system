@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/source/socket.js"></script>
+  <script src="/source/cookie.js"></script>
+  <script src="/source/auth.js"></script>
+  <script src="/source/viewer.js"></script>
+  <script src="/source/stream.js"></script>
+</head>
+<body>
+    <video id="CAM_buffer_0" autoplay playsinline muted></video>
+    <video id="CAM_buffer_1" autoplay playsinline muted></video>
+    <script>
+        authBindSocket(SOCKET)
+        streamBindSocket(SOCKET)
+
+        authenticateFromURL()
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@ function create_feed_div (channel) {
     const div = document.createElement("div")
     div.innerHTML = `<div>
         <div>Channel : <span id="ucont"></span></div>
-        <video id="tvideo" width="320" height="180" autoplay muted>
+        <video id="tvideo" width="320" height="180" autoplay muted></video>
         <button id="buffer0">EmitBuffer0</button>
         <button id="buffer1">EmitBuffer1</button>
     </div>`

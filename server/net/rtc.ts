@@ -42,6 +42,8 @@ export function add_rtc_handlers (socket: Socket<RTCClientToServerEvents, RTCSer
         socket.broadcast.emit("exposeChannel", offer);
     })
 
+    socket.on("swapBuffers", payload => socket.broadcast.emit("swapBuffers", payload))
+
     for (let feed of get_rtc_feeds())
         socket.emit("exposeChannel", { "camera": feed })
 }

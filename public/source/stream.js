@@ -17,6 +17,14 @@ class RTCStream {
                 this.viewer1 = new RTCViewer( "CAM_buffer_1", payload.channel );
             }
         })
+
+        socket.on("swapBuffers", payload => {
+            const zI1 = payload.front == 0 ? 0 : 1;
+            const zI0 = 1 - zI1;
+
+            document.querySelector("#CAM_buffer_0").style.zIndex = `${zI0}`;
+            document.querySelector("#CAM_buffer_1").style.zIndex = `${zI1}`;
+        })
     }
 };
 

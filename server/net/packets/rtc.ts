@@ -32,6 +32,9 @@ export interface PacketRTCIceCandidate {
     channel: string;
     packet : RTCIceCandidate;
 };
+export interface SwapBuffers {
+    front: number;
+};
 
 export interface RTCClientToServerEvents {
     enableCamera:  (enableRequest: EnableCameraChannel) => void;
@@ -40,6 +43,8 @@ export interface RTCClientToServerEvents {
     rtcOffer:        (offer: PacketRTCCameraOffer) => void;
     rtcAnswer:       (answer: PacketRTCCameraAnswer) => void;
     rtcIceCandidate: (candidate: PacketRTCIceCandidate) => void;
+
+    swapBuffers: (payload: SwapBuffers) => void;
 };
 
 export interface RTCServerToClientEvents {
@@ -51,4 +56,6 @@ export interface RTCServerToClientEvents {
     rtcOffer:        (offer: PacketRTCCameraOffer)      => void;
     rtcAnswer:       (answer: PacketRTCCameraAnswer)    => void;
     rtcIceCandidate: (candidate: PacketRTCIceCandidate) => void;
+    
+    swapBuffers: (payload: SwapBuffers) => void;
 };

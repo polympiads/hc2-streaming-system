@@ -10,7 +10,7 @@ class RTCViewer {
     constructor (doc_id, channel) {
         this.video = document.querySelector(`#${doc_id}`);
 
-        SOCKET.on("rtcOffer", async offer => {
+        const offerListener = async offer => {
             if (offer.channel != channel) return ;
             console.log("RECEIVED", offer)
             await this.video.pause();
@@ -35,8 +35,8 @@ class RTCViewer {
             this.peer.setLocalDescription(answer);
             console.log("SEND ANSWER")
             SOCKET.emit("rtcAnswer", { "channel": channel, "answer": answer });
-        })
-        SOCKET.on("rtcIceCandidate", candidate => {
+        }
+        const iceListener = candidate => {
             console.log("CANDIDATE", candidate, channel)
             if (candidate.channel == this.channel) {
                 this.peer.addIceCandidate(
@@ -45,6 +45,19 @@ class RTCViewer {
                     )
                 )
             }
-        })
+        }
+
+        SOCKET.on("rtcOffer", offerListener)
+        SOCKET.on("rtcIceCandidate", iceListener)
+
+        this.offer = offerListener
+        this.ice   = iceListener
+    }
+    close () {
+        SOCKET.off("rtcOffer", this.offer)
+        SOCKET.off("rtcIceCandidate", this.ice)
+        if (this.peer)
+            this.peer.close();
+        this.video.srcObject = null;
     }
 };

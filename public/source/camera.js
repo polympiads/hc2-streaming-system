@@ -6,7 +6,9 @@ const rtc_config  = {
       }
     ]
 };
-const constraints = { audio: false, video: true };
+const constraints = { audio: false, video: {
+    facingMode: { exact: "environment" }
+} };
 
 function log (data) {
     const div = document.createElement("div")
@@ -63,6 +65,7 @@ class RTCController {
             this.peer.addTrack(track, media)
 
         this.video.srcObject = media
+        this.video.play();
 
         const offer = await this.peer.createOffer();
 

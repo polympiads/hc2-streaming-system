@@ -25,9 +25,9 @@ program.command('setpassword <user> <password>')
         }
     })
 
-program.command('listsessions')
+program.command('listusers')
     .exitOverride()
-    .description("list all the opened sessions.")
+    .description("list all the users, with their opened sessions if any.")
     .action(() => {
         console.log(`USER_TYPE`.padEnd(10) + ` ` + `USER_ID`.padEnd(36) + " " + "USER".padEnd(15) + " " + "SESSIONS".padEnd(36) + " " + "IP")
         for (let [username, user_id] of all_user_iterator()) {

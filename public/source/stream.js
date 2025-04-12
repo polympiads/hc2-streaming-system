@@ -19,8 +19,10 @@ class RTCStream {
         })
 
         socket.on("swapBuffers", payload => {
+            console.log("Received swap payload", payload)
             const zI1 = payload.front == 0 ? 0 : 1;
             const zI0 = 1 - zI1;
+            console.log(zI0, zI1)
 
             document.querySelector("#CAM_buffer_0").style.zIndex = `${zI0}`;
             document.querySelector("#CAM_buffer_1").style.zIndex = `${zI1}`;

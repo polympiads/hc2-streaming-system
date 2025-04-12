@@ -1,4 +1,4 @@
-import { revoke_session, revoke_session_for_user } from "./session";
+import { revoke_session_for_user } from "./session";
 import { randomString, sha256 } from "./utils";
 import { v4 as uuidv4 } from "uuid";
 
@@ -78,6 +78,32 @@ class UserManager {
         return true;
     }
 
+    remove_user(username: Username): boolean {
+        if (username == null) {
+            return false;
+        }
+
+        const user_id = this.id_map.get(username);
+        if (user_id == undefined) {
+            return false
+        }
+
+        const user = this.user_map.get(user_id);
+        if (user == undefined) {
+            this.id_map.delete(user_id);
+            return true;
+        }
+        if (user.get_type() == UserType.Admin) {
+            return false;
+        }
+
+        this.user_map.delete(user_id);
+
+        revoke_session_for_user(user_id);
+
+        return true;
+    }
+
     set_new_password(username: Username, password: string): boolean {
         let id = this.id_map.get(username)
         if (id == undefined) {
@@ -122,6 +148,9 @@ class UserManager {
 }
 
 const USER_MANAGER = new UserManager();
+
+export const add_user = (username: Username, password: string) => USER_MANAGER.add_user(username, password, UserType.Camera);
+export const remove_user = (username: Username) => USER_MANAGER.remove_user(username);
 
 export const set_new_password = (username: Username, password: string) => USER_MANAGER.set_new_password(username, password)
 export const get_user_by_name = (username: Username) => USER_MANAGER.get_user_by_name(username)

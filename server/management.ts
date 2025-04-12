@@ -1,5 +1,5 @@
 import { CommanderError, program } from "commander";
-import { all_user_iterator, set_new_password } from "./net/users";
+import { add_user, all_user_iterator, get_user, remove_user, set_new_password } from "./net/users";
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import stringArgv from 'string-argv'
@@ -29,11 +29,12 @@ program.command('listsessions')
     .exitOverride()
     .description("list all the opened sessions.")
     .action(() => {
-        console.log(`USER_ID`.padEnd(36) + " " + "USER".padEnd(15) + " " + "SESSIONS".padEnd(36) + " " + "IP")
+        console.log(`USER_TYPE`.padEnd(10) + ` ` + `USER_ID`.padEnd(36) + " " + "USER".padEnd(15) + " " + "SESSIONS".padEnd(36) + " " + "IP")
         for (let [username, user_id] of all_user_iterator()) {
             const session = get_session_for_user(user_id);
+            const user = get_user(user_id);
             
-            process.stdout.write(`${user_id}`.padEnd(36) + " " + `${username}`.padEnd(15))
+            process.stdout.write(`${user?.get_type()}` + ` ` + `${user_id}`.padEnd(36) + " " + `${username}`.padEnd(15))
             if (session != undefined) {
                 process.stdout.write(` ` + `${session.session_id}`.padEnd(36) + " " + `${session.ip_info}`)
             }
@@ -55,6 +56,30 @@ program.command('revokesession <session_id>')
         } else {
             console.log("Session doesn't exists.");
         }
+    })
+
+program.command("adduser <username> <password>")
+    .exitOverride()
+    .description("Add a user.")
+    .action((username: string, password: string) => {
+        if (!add_user(username, password)) {
+            console.log("Error : Failed to add the given user. Make sure it doesn't already exists.");
+            return;
+        }
+
+        console.log("User added.");
+    })
+
+program.command("deleteuser <username>")
+    .exitOverride()
+    .description("Delete a user. Revoke a session if managed. Can't remove admin.")
+    .action((username: string) => {
+        if (!remove_user(username)) {
+            console.log("Error : Couldn't remove the given user. Make sure it exists and it's not an admin.");
+            return;
+        }
+
+        console.log("User removed.");
     })
 
 var SHOULD_STOP = false

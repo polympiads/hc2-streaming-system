@@ -53,6 +53,6 @@ const ADMIN_MANAGER = new AdminManager();
 function adminBindSocket (socket) {
     socket.on("exposeChannel", channel => ADMIN_MANAGER.exposeChannel(channel.camera))
 
-    document.querySelector("#swap_buffers_0", () => socket.emit("swapBuffers", { front: 0 }))
-    document.querySelector("#swap_buffers_1", () => socket.emit("swapBuffers", { front: 1 }))
+    document.querySelector("#swap_buffers_0").onclick = () => socket.emit("swapBuffers", { front: 0 })
+    document.querySelector("#swap_buffers_1").onclick = () => socket.emit("swapBuffers", { front: 1 })
 }

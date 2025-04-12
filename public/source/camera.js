@@ -1,5 +1,11 @@
 
-const rtc_config  = {};
+const rtc_config  = {
+    iceServers: [
+      {
+        urls: 'stun:stun.l.google.com:19302'
+      }
+    ]
+};
 const constraints = { audio: false, video: true };
 
 function log (data) {

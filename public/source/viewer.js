@@ -1,3 +1,11 @@
+const RTC_VIEWER_CONF = {
+    iceServers: [
+      {
+        urls: 'stun:stun.l.google.com:19302'
+      }
+    ]
+};
+
 class RTCViewer {
     constructor (doc_id, channel) {
         this.video = document.querySelector(`#${doc_id}`);
@@ -9,7 +17,7 @@ class RTCViewer {
             this.video.srcObject = null;
             if (this.peer)
                 this.peer.close();
-            this.peer = new RTCPeerConnection({  });
+            this.peer = new RTCPeerConnection(RTC_VIEWER_CONF);
             this.peer.ontrack = async event => {
                 this.video.srcObject = event.streams[0];
                 await this.video.play();

@@ -90,13 +90,14 @@ class UserManager {
 
         const user = this.user_map.get(user_id);
         if (user == undefined) {
-            this.id_map.delete(user_id);
+            this.id_map.delete(username);
             return true;
         }
         if (user.get_type() == UserType.Admin) {
             return false;
         }
 
+        this.id_map.delete(username);
         this.user_map.delete(user_id);
 
         revoke_session_for_user(user_id);

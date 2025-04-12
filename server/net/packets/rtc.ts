@@ -1,16 +1,23 @@
+import { SessionID } from "../session";
 
-export enum CameraType {
-    ADMIN = 0,
+export enum Buffer {
     STREAM_BUFFER0 = 1,
     STREAM_BUFFER1 = 2
 };
+
+export enum Response {
+    OK,
+    NotAuthorized,
+    BadCamera
+}
 
 export interface ExposeCameraChannel {
     camera: string;
 };
 export interface EnableCameraChannel {
+    camera: string;
     channel: string;
-    buffer:  CameraType;
+    buffer:  Buffer;
 };
 
 export interface PacketRTCCameraOffer {
@@ -36,6 +43,8 @@ export interface RTCClientToServerEvents {
 };
 
 export interface RTCServerToClientEvents {
+    onEnableCamera:  (enableRequest: Response) => void;
+    onExposeChannel: (exposeRequest: Response) => void;
     enableCamera:  (enableRequest: EnableCameraChannel) => void;
     exposeChannel: (exposeRequest: ExposeCameraChannel) => void;
 

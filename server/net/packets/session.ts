@@ -1,4 +1,4 @@
-import { Secret, SessionID } from "../session";
+import { SessionID } from "../session";
 
 export interface AuthRequest {
     username: string;
@@ -8,7 +8,6 @@ export interface AuthRequest {
 export interface AuthResponse {
     code: AuthResponseCode;
     session : SessionID | null;
-    secret  : Secret | null;
 };
 
 export enum AuthResponseCode {
@@ -19,9 +18,6 @@ export enum AuthResponseCode {
 
 export interface SessionRequest {
     session : SessionID;
-
-    // TODO : wtf is this
-    secret: Secret;
 };
 export interface SessionResponse {
     success : boolean;

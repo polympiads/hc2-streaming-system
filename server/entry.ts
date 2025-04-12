@@ -1,12 +1,14 @@
 
 import express from 'express';
 import http from 'http';
-import { DefaultEventsMap, Server } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
+import { Server } from 'socket.io';
 
 import { ClientToServerEvents as AClientToServerEvents, ServerToClientEvents as AServerToClientEvents } from './net/interface';
-import { Client } from 'socket.io/dist/client';
 import { add_authentication_handlers } from './net/session';
+import { load_user as load_users } from './net/users';
+import { launch_management_input } from './management';
+
+load_users();
 
 interface ClientToServerEvents {
 	/// The admin request a specific camera. Should be sent directly
@@ -62,4 +64,6 @@ io.on('connection', socket => {
   
 server.listen(3000, () => {
     console.log('Signaling server running on http://localhost:3000');
+
+	launch_management_input();
 });

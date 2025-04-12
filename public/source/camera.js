@@ -6,9 +6,18 @@ const rtc_config  = {
       }
     ]
 };
-const constraints = { audio: false, video: {
+const constraints_phone = { audio: false, video: {
     facingMode: { exact: "environment" }
 } };
+const constraints_laptop = { audio: false, video: true };
+
+async function getUserMedia () {
+    try {
+        return await navigator.mediaDevices.getUserMedia(constraints_phone);
+    } catch {}
+
+    return await await navigator.mediaDevices.getUserMedia(constraints_laptop);
+}
 
 function log (data) {
     const div = document.createElement("div")
@@ -58,7 +67,7 @@ class RTCController {
         };
         log("CREATE PEER")
 
-        const media = await navigator.mediaDevices.getUserMedia(constraints)
+        const media = await getUserMedia()
         log(media)
         log(media.getTracks())
         for (let track of media.getTracks())
